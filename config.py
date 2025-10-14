@@ -69,7 +69,7 @@ def get_settings() -> Settings:
     url = os.getenv("DATABASE_URL")
     if not url:
         raise RuntimeError(
-            "DATABASE_URL is not set. Add it to ticketing/.env or your environment."
+            "DATABASE_URL is not set."
         )
 
     # Normalize a plain "postgresql://" URL to explicitly use the psycopg v3 driver.
@@ -79,7 +79,7 @@ def get_settings() -> Settings:
 
     return Settings(
         database_url=url,
-        echo=_as_bool(os.getenv("SQL_ECHO"), False),
+        echo=_as_bool(os.getenv("SQL_ECHO"), True),
         pool_size=int(os.getenv("SQL_POOL_SIZE", "5")),
         max_overflow=int(os.getenv("SQL_MAX_OVERFLOW", "10")),
         pool_timeout=int(os.getenv("SQL_POOL_TIMEOUT", "30")),
