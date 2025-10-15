@@ -11,5 +11,6 @@ from db.base import Base
 
 class Sear(Base):
     __tablename__ = "seats"
-    __table_args__ = ()
-    
+    __table_args__ = (
+        #prevent the table from having dupicate seat positions
+    )
