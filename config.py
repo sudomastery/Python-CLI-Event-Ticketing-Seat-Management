@@ -15,6 +15,7 @@ import os
 #read .env and load environment variables
 from typing import Optional
 from dotenv import load_dotenv
+load_dotenv()
 
 #read the env from project root
 ENV_PATH_ROOT = Path(__file__).resolve().parents[1] / ".env"
