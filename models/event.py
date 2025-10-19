@@ -6,6 +6,8 @@ from typing import Optional
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime, ForeignKey
 from db.base import Base
+from datetime import datetime
+
 
 class Event(Base):
     __tablename__ = "events"
@@ -22,7 +24,7 @@ class Event(Base):
 
     #starttime
 
-    start_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
 
     #nullable description/ advertisement
