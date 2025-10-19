@@ -12,3 +12,14 @@ from db.base import Base
 
 class EventSeat(Base):
     __tablename__ = "event_seats"
+    #prevent the same seat from appearing twice for the same event
+    __table_args__ = (UniqueConstraint("event_id", "seat_id"),)
+
+    #fk to event id
+    event_id: Mapped [int] = mapped_column(
+        ForeignKey("events.id", ondelete="CASCADE", index=True, nullable=False)
+    )
+
+    seat_id: Mapped[int] = mapped_column(
+        ForeignKey("seats.id", ondelete="CASCADE", index=True, nullable=False)
+    )
