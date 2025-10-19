@@ -7,7 +7,7 @@ from typing import Optional
 from datetime import datetime
 
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Interger, ForeignKey, UniqueConstraint, DateTime, Enum as SAEnum
+from sqlalchemy import Integer, ForeignKey, UniqueConstraint, DateTime, Enum as SAEnum
 from db.base import Base
 
 class EventSeat(Base):
@@ -15,13 +15,17 @@ class EventSeat(Base):
     #prevent the same seat from appearing twice for the same event
     __table_args__ = (UniqueConstraint("event_id", "seat_id"),)
 
+
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
     #fk to event id
-    event_id: Mapped [int] = mapped_column(
-        ForeignKey("events.id", ondelete="CASCADE", index=True, nullable=False)
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("events.id", ondelete="CASCADE"), index=True, nullable=False
     )
 
     seat_id: Mapped[int] = mapped_column(
-        ForeignKey("seats.id", ondelete="CASCADE", index=True, nullable=False)
+        ForeignKey("seats.id", ondelete="CASCADE"), index=True, nullable=False
     )
 
     status: Mapped[str] = mapped_column(
@@ -33,7 +37,7 @@ class EventSeat(Base):
 
     )
 
-    price_ksh: Mapped[int] = mapped_column(Interger, nullable=False)
+    price_ksh: Mapped[int] = mapped_column(Integer, nullable=False)
 
     #when a seat is temporarily held
-    held_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True)), 
+    held_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
