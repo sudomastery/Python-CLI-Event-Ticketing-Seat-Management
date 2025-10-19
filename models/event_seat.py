@@ -23,3 +23,17 @@ class EventSeat(Base):
     seat_id: Mapped[int] = mapped_column(
         ForeignKey("seats.id", ondelete="CASCADE", index=True, nullable=False)
     )
+
+    status: Mapped[str] = mapped_column(
+        SAEnum("AVAILABLE", "HELD", "SOLD", name="eventseat_status", native_enum=False),
+        default="AVAILABLE", 
+        nullable=False,
+        index=True,
+
+
+    )
+
+    price_ksh: Mapped[int] = mapped_column(Interger, nullable=False)
+
+    #when a seat is temporarily held
+    held_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True)), 

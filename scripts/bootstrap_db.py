@@ -12,6 +12,7 @@ from db import create_all, db_healthcheck
 from models.venue import Venue  # noqa: F401
 from models.seat import Seat    # noqa: F401
 from models.event import Event  # noqa: F401
+from models.event_seat import EventSeat  # noqa: F401
 
 
 def main() -> None:
