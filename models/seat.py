@@ -25,5 +25,7 @@ class Seat(Base):
     row: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
     number: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
 
+
+    #debugging
     def __repr__(self) -> str:
         return f"Seat(id={self.id!r}, venue_id={self.venue_id!r}, pos={self.row}{self.number})"

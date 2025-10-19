@@ -11,6 +11,7 @@ from db import create_all, db_healthcheck
 # Import models so their tables are registered with Base.metadata (import side effects)
 from models.venue import Venue  # noqa: F401
 from models.seat import Seat    # noqa: F401
+from models.event import Event  # noqa: F401
 
 
 def main() -> None:
