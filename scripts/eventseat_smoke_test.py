@@ -47,7 +47,7 @@ def main() -> None:
         if es_count == 0:
             seat_ids = session.scalars(select(Seat.id).where(Seat.venue_id == venue.id)).all()
             session.add_all([
-                EventSeat(event_id=event.id, seat_id=sid, status="AVAILABLE", price_cents=1500)
+                EventSeat(event_id=event.id, seat_id=sid, status="AVAILABLE", price_ksh=1500)
                 for sid in seat_ids
             ])
 

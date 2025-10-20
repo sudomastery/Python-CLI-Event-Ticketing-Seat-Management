@@ -3,14 +3,26 @@ create the seats table
 each seat belongs to a venue
 unique seat per venue by (row, number)
 """
-from typing import Optional
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import List
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, ForeignKey, UniqueConstraint
 from db.base import Base
 
 
 class Seat(Base):
     __tablename__ = "seats"
+
+    #relationships
+    venue: Mapped["Venue"] = relationship(back_populates="seats")
+    events_seats: Mapped[List["EventSeat"]] = relationship(
+        back_populates="seat", cascade="all, delete-orphan"
+    )
+
+
+    
+
+
+
     __table_args__ = (
         #prevent the table from having dupicate seat positions
         UniqueConstraint("venue_id", "row", "number"),

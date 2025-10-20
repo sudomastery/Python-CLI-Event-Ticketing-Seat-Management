@@ -2,8 +2,8 @@
 event model maps to events table
 - Each event belongs to a venue.
 """
-from typing import Optional 
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import Optional, List
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, DateTime, ForeignKey
 from db.base import Base
 from datetime import datetime
@@ -26,6 +26,11 @@ class Event(Base):
 
     start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
 
+    # Relationships
+    venue: Mapped["Venue"] = relationship(back_populates="events")
+    event_seats: Mapped[List["EventSeat"]] = relationship(
+        back_populates="event", cascade="all, delete-orphan"
+    )
 
     #nullable description/ advertisement
     description: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True )

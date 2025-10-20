@@ -1,9 +1,9 @@
 # declarative mapping to venues tble
-from typing import Optional
+from typing import Optional, List
 
 
 #Mapped/mapped_column privide type attributes for ORM columns
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 #share base every model inherits from
 from db.base import Base
@@ -24,6 +24,14 @@ class Venue(Base):
 
     #address
     address: Mapped[Optional[str]] = mapped_column(String(300), nullable = True)
+
+    #relationships
+    seats: Mapped[List["Seat"]] = relationship(
+        back_populates="venue", cascade="all, delete-orphan"
+    )
+    events: Mapped[List["Event"]] = relationship(
+        back_populates="venue", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"Venue(id={self.id!r}, name={self.name!r}, address={self.address!r})"

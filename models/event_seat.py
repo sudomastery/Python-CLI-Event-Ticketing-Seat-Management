@@ -6,7 +6,8 @@ EventSeat model (maps to 'event_seats' table).
 from typing import Optional
 from datetime import datetime
 
-from sqlalchemy.orm import Mapped, mapped_column
+
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, ForeignKey, UniqueConstraint, DateTime, Enum as SAEnum
 from db.base import Base
 
@@ -41,3 +42,6 @@ class EventSeat(Base):
 
     #when a seat is temporarily held
     held_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    # Relationships
+    event: Mapped["Event"] = relationship(back_populates="event_seats")
+    seat: Mapped["Seat"] = relationship(back_populates="event_seats")
