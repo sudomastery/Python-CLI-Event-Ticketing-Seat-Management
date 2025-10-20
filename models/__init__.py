@@ -1,15 +1,11 @@
-# # Marks 'db' as a Python package and re-exports helpers for convenience.
-# from .session import engine, SessionLocal, get_session, create_all, drop_all, db_healthcheck
-# from .base import Base
+"""
+Aggregate imports so scripts can import all models in one place,
+ensuring mappers are registered before first use.
+"""
 
-# __all__ = [
-#     "engine",
-#     "SessionLocal",
-#     "get_session",
-#     "create_all",
-#     "drop_all",
-#     "db_healthcheck",
-#     "Base",
-# ]
+from .venue import Venue
+from .seat import Seat
+from .event import Event
+from .event_seat import EventSeat
 
-#MAKE IT EMPTY FIRST
+__all__ = ["Venue", "Seat", "Event", "EventSeat"]

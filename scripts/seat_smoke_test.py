@@ -8,6 +8,11 @@ Seed a few seats for an existing venue, then query them back.
 Run from project root:
   python -m scripts.seat_smoke_test
 """
+from pathlib import Path
+import sys
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 from sqlalchemy import select, func
 
 from db import get_session

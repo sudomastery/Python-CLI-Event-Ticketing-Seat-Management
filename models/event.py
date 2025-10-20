@@ -2,11 +2,16 @@
 event model maps to events table
 - Each event belongs to a venue.
 """
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, DateTime, ForeignKey
 from db.base import Base
 from datetime import datetime
+
+if TYPE_CHECKING:
+    # type-only imports to avoid circular imports at runtime
+    from models.venue import Venue
+    from models.event_seat import EventSeat
 
 
 class Event(Base):

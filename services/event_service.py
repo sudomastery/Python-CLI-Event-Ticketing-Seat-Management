@@ -20,3 +20,15 @@ def list_events_for_venue(venue_id: int) -> List[Event]:
         return session.scalars(
             select(Event).where(Event.venue_id == venue_id).order_by(Event.start_at)
         ).all()
+    
+def list_all_events() -> List[Event]:
+    with get_session() as session:
+        return session.scalars(select(Event).order_by(Event.start_at)).all()
+
+def delete_event(event_id: int) -> bool:
+    with get_session() as session:
+        e = session.get(Event, event_id)
+        if not e:
+            return False
+        session.delete(e)
+        return True

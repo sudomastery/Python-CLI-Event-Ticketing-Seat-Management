@@ -3,6 +3,11 @@ Seed EventSeat rows for an event and list availability.
 Run from project root:
   python -m scripts.eventseat_smoke_test
 """
+from pathlib import Path
+import sys
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import select, func
 
@@ -21,9 +26,8 @@ def main() -> None:
         venue = session.scalar(select(Venue).where(Venue.name == VENUE_NAME))
         if venue is None:
             venue = Venue(name=VENUE_NAME, address="Nairobi")
-            session.add(Venue(name=VENUE_NAME, address="Nairobi"))
+            session.add(venue)
             session.flush()
-            venue = session.scalar(select(Venue).where(Venue.name == VENUE_NAME))
 
         # Seed seats A1..A5 if none
         seat_count = session.scalar(select(func.count()).select_from(Seat).where(Seat.venue_id == venue.id))
@@ -50,17 +54,18 @@ def main() -> None:
                 EventSeat(event_id=event.id, seat_id=sid, status="AVAILABLE", price_ksh=1500)
                 for sid in seat_ids
             ])
+        event_id = event.id
 
     # Show counts by status
     with get_session() as session:
         totals = session.execute(
-            select(EventSeat.status, func.count()).where(EventSeat.event_id == event.id).group_by(EventSeat.status)
+            select(EventSeat.status, func.count()).where(EventSeat.event_id == event_id).group_by(EventSeat.status)
         ).all()
         print("EventSeat counts:", dict(totals))
 
         # Demonstrate a hold
         es = session.scalar(
-            select(EventSeat).where(EventSeat.event_id == event.id, EventSeat.status == "AVAILABLE")
+            select(EventSeat).where(EventSeat.event_id == event_id, EventSeat.status == "AVAILABLE")
         )
         if es:
             es.status = "HELD"
@@ -70,7 +75,7 @@ def main() -> None:
     # Show updated counts
     with get_session() as session:
         totals = session.execute(
-            select(EventSeat.status, func.count()).where(EventSeat.event_id == event.id).group_by(EventSeat.status)
+            select(EventSeat.status, func.count()).where(EventSeat.event_id == event_id).group_by(EventSeat.status)
         ).all()
         print("Updated counts:", dict(totals))
 

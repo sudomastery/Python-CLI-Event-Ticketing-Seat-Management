@@ -3,13 +3,18 @@ EventSeat model (maps to 'event_seats' table).
 - One row per seat for a specific event (availability + price).
 - Unique per event/seat.
 """
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from datetime import datetime
 
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, ForeignKey, UniqueConstraint, DateTime, Enum as SAEnum
 from db.base import Base
+
+if TYPE_CHECKING:
+    # type-only imports to avoid circular imports at runtime
+    from models.event import Event
+    from models.seat import Seat
 
 class EventSeat(Base):
     __tablename__ = "event_seats"

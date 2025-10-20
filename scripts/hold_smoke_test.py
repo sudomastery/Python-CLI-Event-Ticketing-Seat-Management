@@ -6,6 +6,9 @@ Run from project root:
 from datetime import datetime, timezone
 from sqlalchemy import select
 
+# Ensure models are imported to register mappers
+from models import Venue, Seat, Event, EventSeat  # noqa: F401
+
 from db import get_session
 from models.event import Event
 from services.eventseat_service import (

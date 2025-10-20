@@ -5,6 +5,11 @@ Bootstrap the database schema for local development.
 - Prints a DB healthcheck to confirm connectivity.
 - Creates any missing tables (safe to re-run).
 """
+from pathlib import Path
+import sys
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from db import create_all, db_healthcheck
 

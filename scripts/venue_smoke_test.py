@@ -6,6 +6,11 @@ End-to-end smoke test for the Venue model.
 - Queries it back and prints it.
 - Shows the SQL in the terminal (because SQL_ECHO=true).
 """
+from pathlib import Path
+import sys
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 from sqlalchemy import select
 
 from db import get_session
@@ -20,7 +25,7 @@ def main() -> None:
 
     # Query it back
     with get_session() as session:
-        stmt = select(Venue).where(Venue.name == "Sample Hall")
+        stmt = select(Venue).where(Venue.name == "Nyayo National Stadium")
         row = session.scalars(stmt).first()
         print("Fetched:", row)
 

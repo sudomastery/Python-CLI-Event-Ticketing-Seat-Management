@@ -80,7 +80,7 @@ def get_settings() -> Settings:
 
     return Settings(
         database_url=url,
-        echo=_as_bool(os.getenv("SQL_ECHO"), True),
+        echo=_as_bool(os.getenv("SQL_ECHO"), False),
         pool_size=int(os.getenv("SQL_POOL_SIZE", "5")),
         max_overflow=int(os.getenv("SQL_MAX_OVERFLOW", "10")),
         pool_timeout=int(os.getenv("SQL_POOL_TIMEOUT", "30")),

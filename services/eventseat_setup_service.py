@@ -5,7 +5,13 @@ from models.seat import Seat
 from models.event_seat import EventSeat
 
 
-def seed_event_seats(event_id: int, venue_id: int, price_ksh: int, only_missing: bool = True) -> int:
+def seed_event_seats(
+    event_id: int,
+    venue_id: int,
+    price_ksh: int,
+    only_missing: bool = True,
+    seat_limit: int | None = None,
+) -> int:
     """
     Create EventSeat rows for all seats in a venue for the given event.
     If only_missing, skip seats already present for this event.
@@ -13,7 +19,12 @@ def seed_event_seats(event_id: int, venue_id: int, price_ksh: int, only_missing:
     """
     created = 0
     with get_session() as session:
-        seat_ids = session.scalars(select(Seat.id).where(Seat.venue_id == venue_id)).all()
+        # Deterministic ordering by row, number so capacity selection is predictable
+        seat_ids = session.scalars(
+            select(Seat.id).where(Seat.venue_id == venue_id).order_by(Seat.row, Seat.number)
+        ).all()
+        if seat_limit is not None and seat_limit >= 0:
+            seat_ids = seat_ids[:seat_limit]
         if not seat_ids:
             return 0
 
