@@ -7,5 +7,7 @@ from .venue import Venue
 from .seat import Seat
 from .event import Event
 from .event_seat import EventSeat
+from .customer import Customer
+from .ticket import Ticket
 
-__all__ = ["Venue", "Seat", "Event", "EventSeat"]
+__all__ = ["Venue", "Seat", "Event", "EventSeat", "Customer", "Ticket"]

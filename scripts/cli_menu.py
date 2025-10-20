@@ -61,6 +61,8 @@ from services.event_service import (
 from services.eventseat_setup_service import seed_event_seats
 from services.eventseat_service import sell_event_seat
 from services.seat_service import ensure_grid
+from services.customer_service import get_or_create_customer
+from services.booking import purchase_event_seats
 
 
 def input_nonempty(prompt: str) -> str:
@@ -283,19 +285,25 @@ def customer_book_seats() -> None:
                 label = f"{seat.row}{seat.number}" if seat else f"seat#{es.seat_id}"
                 extra_map[es.id] = (es, label)
 
-    sold = 0
-    now = datetime.now(tz=timezone.utc)
-    for esid in to_sell_ids:
-        ok = sell_event_seat(esid)
-        if ok:
-            sold += 1
-            es, label = avail_map.get(esid) or extra_map.get(esid, (None, f"#{esid}"))
-            price = es.price_ksh if es else "?"
-            print(f"Booked: '{event_name}' — Seat {label} — KSh {price} — at {now.isoformat()}")
-        else:
-            print(f"Could not book seat #{esid} (unavailable).")
+    # Gather customer info
+    cust_name = input_nonempty("Your name: ")
+    cust_email = input_nonempty("Your email: ")
+    cust_phone = input("Your phone (optional): ").strip() or None
+    customer = get_or_create_customer(cust_name, cust_email, cust_phone)
+    print(f"Customer ID: {customer.id}")
 
-    print(f"\nSOLD {sold}/{len(to_sell_ids)} seats.")
+    # Purchase (create tickets) and print confirmations
+    tickets = purchase_event_seats(event_id, to_sell_ids, customer.id)
+    if not tickets:
+        print("No seats could be booked (unavailable).")
+        return
+
+    print("")
+    for ticket, label in tickets:
+        when = ticket.purchased_at.isoformat()
+        print(f"Booked: '{event_name}' — Seat {label} — KSh {ticket.price_ksh} — at {when} — Customer #{customer.id}")
+
+    print(f"\nSOLD {len(tickets)}/{len(to_sell_ids)} seats.")
 
 
 def customer_menu() -> None:
@@ -303,6 +311,7 @@ def customer_menu() -> None:
         print("\nCustomer Menu")
         print("1) List events")
         print("2) Book available seats")
+        print("3) My bookings")
         print("0) Back")
         choice = input("Select: ").strip()
         if choice == "1":
@@ -311,10 +320,45 @@ def customer_menu() -> None:
         elif choice == "2":
             customer_book_seats()
             pause()
+        elif choice == "3":
+            customer_list_my_bookings()
+            pause()
         elif choice == "0":
             return
         else:
             print("Invalid choice.")
+
+
+def customer_list_my_bookings() -> None:
+    email = input_nonempty("Enter your email to view bookings: ").strip().lower()
+    with get_session() as session:
+        from models.customer import Customer
+        from models.ticket import Ticket
+        cust = session.scalar(select(Customer).where(Customer.email == email))
+        if not cust:
+            print("No customer found for that email.")
+            return
+        rows = session.execute(
+            select(Ticket, EventSeat)
+            .join(EventSeat, EventSeat.id == Ticket.event_seat_id)
+            .where(Ticket.customer_id == cust.id)
+            .order_by(Ticket.purchased_at.desc())
+        ).all()
+        if not rows:
+            print("You have no bookings.")
+            return
+        print(f"Customer #{cust.id} — {cust.name} <{cust.email}>")
+        for ticket, es in rows:
+            # Load event and seat label
+            ev = session.get(Event, es.event_id)
+            seat = es.seat if hasattr(es, "seat") else None
+            if seat is None:
+                seat = session.get(type(es).seat.property.mapper.class_, es.seat_id)  # fallback
+            label = f"{seat.row}{seat.number}" if seat else f"seat#{es.seat_id}"
+            when = ticket.purchased_at.isoformat()
+            price = ticket.price_ksh
+            ename = ev.name if ev else f"Event {es.event_id}"
+            print(f"- {when} — {ename} — Seat {label} — KSh {price} — Ticket #{ticket.id}")
 
 
 # ---------- Main ----------
