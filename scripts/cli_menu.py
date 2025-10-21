@@ -63,6 +63,7 @@ from services.eventseat_service import sell_event_seat
 from services.seat_service import ensure_grid
 from services.customer_service import get_or_create_customer
 from services.booking import purchase_event_seats
+from services.eventseat_service import hold_event_seats
 
 
 def input_nonempty(prompt: str) -> str:
@@ -311,7 +312,8 @@ def customer_menu() -> None:
         print("\nCustomer Menu")
         print("1) List events")
         print("2) Book available seats")
-        print("3) My bookings")
+        print("3) Reserve then pay (MPESA)")
+        print("4) My bookings")
         print("0) Back")
         choice = input("Select: ").strip()
         if choice == "1":
@@ -321,12 +323,98 @@ def customer_menu() -> None:
             customer_book_seats()
             pause()
         elif choice == "3":
+            customer_reserve_and_pay()
+            pause()
+        elif choice == "4":
             customer_list_my_bookings()
             pause()
         elif choice == "0":
             return
         else:
             print("Invalid choice.")
+
+
+def customer_reserve_and_pay() -> None:
+    rows = customer_list_events()
+    if not rows:
+        return
+    eid_str = input_nonempty("Enter Event ID to reserve: ")
+    try:
+        event_id = int(eid_str)
+    except ValueError:
+        print("Invalid Event ID.")
+        return
+
+    # Show available seats
+    avail = fetch_available_with_labels(event_id, limit=None)
+    if not avail:
+        print("No available seats.")
+        return
+
+    print("\nAvailable seats:")
+    for es, label in avail:
+        print(f"EventSeat #{es.id} — {label} — KSh {es.price_ksh}")
+
+    choice = input_nonempty("Enter seat labels or EventSeat IDs to reserve (comma-separated): ")
+    tokens = [t.strip() for t in choice.split(",") if t.strip()]
+
+    label_map = {label.upper(): es.seat_id for es, label in avail}
+    to_hold_seat_ids: List[int] = []
+    for t in tokens:
+        if t.isdigit():
+            # An EventSeat ID was given; map to its seat_id
+            try:
+                esid = int(t)
+            except ValueError:
+                continue
+            es = next((es for es, _ in avail if es.id == esid), None)
+            if es:
+                to_hold_seat_ids.append(es.seat_id)
+        else:
+            sid = label_map.get(t.upper())
+            if sid:
+                to_hold_seat_ids.append(sid)
+
+    if not to_hold_seat_ids:
+        print("No valid selections.")
+        return
+
+    # Place holds for 10 minutes
+    held_eventseat_ids = hold_event_seats(event_id, to_hold_seat_ids, minutes=10)
+    if not held_eventseat_ids:
+        print("Could not place holds (perhaps already taken).")
+        return
+
+    print("\nHOLD PLACED on the following EventSeat IDs:", held_eventseat_ids)
+    print("Please make MPESA payment to Till No. 0000 now.")
+    print("You have 10 minutes before the hold expires.")
+    confirm = input_nonempty("Have you completed payment? (yes/no): ").strip().lower()
+    if confirm not in ("y", "yes"):
+        print("Payment not confirmed. Holds will expire automatically.")
+        return
+
+    # Gather customer info and finalize purchase
+    cust_name = input_nonempty("Your name: ")
+    cust_email = input_nonempty("Your email: ")
+    cust_phone = input("Your phone (optional): ").strip() or None
+    customer = get_or_create_customer(cust_name, cust_email, cust_phone)
+
+    # Convert held EventSeat IDs into tickets
+    tickets = purchase_event_seats(event_id, held_eventseat_ids, customer.id)
+    if not tickets:
+        print("Payment confirmed, but could not finalize tickets (holds may have expired).")
+        return
+
+    # Fetch event name for printing
+    with get_session() as session:
+        ev = session.get(Event, event_id)
+        event_name = ev.name if ev else f"Event {event_id}"
+
+    print("")
+    for ticket, label in tickets:
+        when = ticket.purchased_at.isoformat()
+        print(f"TICKET: '{event_name}' — Seat {label} — KSh {ticket.price_ksh} — at {when} — Customer #{customer.id}")
+    print(f"\nCONFIRMED: {len(tickets)} ticket(s). Thank you!")
 
 
 def customer_list_my_bookings() -> None:

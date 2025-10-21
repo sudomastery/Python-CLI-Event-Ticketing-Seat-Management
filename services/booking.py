@@ -40,14 +40,26 @@ def purchase_event_seats(event_id: int, eventseat_ids: Iterable[int], customer_i
 		# Process in requested order
 		for esid in ids:
 			es = id_to_es.get(esid)
-			if not es or es.status not in ("AVAILABLE", "HELD"):
+			if not es:
 				continue
-			# If HELD but expired, treat as AVAILABLE
-			if es.status == "HELD" and es.held_until and es.held_until <= now:
-				es.status = "AVAILABLE"
-				es.held_until = None
 
-			if es.status != "AVAILABLE":
+			# Decide if we can sell this seat now.
+			can_sell = False
+			if es.status == "AVAILABLE":
+				can_sell = True
+			elif es.status == "HELD":
+				# If hold is still valid, allow selling; if expired, revert to AVAILABLE and sell.
+				if es.held_until and es.held_until > now:
+					can_sell = True
+				else:
+					es.status = "AVAILABLE"
+					es.held_until = None
+					can_sell = True
+			else:
+				# SOLD or any other status → skip
+				can_sell = False
+
+			if not can_sell:
 				continue
 
 			# Sell and create ticket
