@@ -62,7 +62,7 @@ from services.eventseat_setup_service import seed_event_seats
 from services.eventseat_service import sell_event_seat
 from services.seat_service import ensure_grid
 from services.customer_service import get_or_create_customer
-from services.booking import purchase_event_seats
+from services.booking import purchase_event_seats, finalize_held_seats
 from services.eventseat_service import hold_event_seats
 
 
@@ -286,6 +286,34 @@ def customer_book_seats() -> None:
                 label = f"{seat.row}{seat.number}" if seat else f"seat#{es.seat_id}"
                 extra_map[es.id] = (es, label)
 
+    # Place a 10-minute hold on selected seats (by seat_id) before payment
+    seat_ids_to_hold: List[int] = []
+    for esid in to_sell_ids:
+        pair = avail_map.get(esid) or extra_map.get(esid)
+        if pair:
+            es, _ = pair
+            seat_ids_to_hold.append(es.seat_id)
+
+    held_eventseat_ids = hold_event_seats(event_id, seat_ids_to_hold, minutes=10)
+    if not held_eventseat_ids:
+        print("Could not place holds; seats may have been taken.")
+        return
+
+    # Recompute total from held items only
+    held_map = {es.id: (es, lbl) for (es, lbl) in (avail + list(extra_map.values())) if es.id in held_eventseat_ids}
+    total_amount = sum(es.price_ksh for es, _ in held_map.values())
+
+    print("\nYour seats are on HOLD for 10 minutes:")
+    for es, label in held_map.values():
+        until = es.held_until.isoformat() if es.held_until else "in 10 minutes"
+        print(f" - {label} — KSh {es.price_ksh} (held until {until})")
+    print(f"Total: KSh {total_amount}")
+    print("Pay with M-Pesa to Till No. 0000.")
+    confirm = input_nonempty("Have you completed payment? (yes/no): ").strip().lower()
+    if confirm not in ("y", "yes"):
+        print("Payment not confirmed. Holds will expire automatically in 10 minutes.")
+        return
+
     # Gather customer info
     cust_name = input_nonempty("Your name: ")
     cust_email = input_nonempty("Your email: ")
@@ -294,7 +322,8 @@ def customer_book_seats() -> None:
     print(f"Customer ID: {customer.id}")
 
     # Purchase (create tickets) and print confirmations
-    tickets = purchase_event_seats(event_id, to_sell_ids, customer.id)
+    # Finalize purchase of held seats
+    tickets = finalize_held_seats(event_id, held_eventseat_ids, customer.id)
     if not tickets:
         print("No seats could be booked (unavailable).")
         return
@@ -309,23 +338,18 @@ def customer_book_seats() -> None:
 
 def customer_menu() -> None:
     while True:
+        # Show events immediately when entering customer menu
+        print("\nAvailable events:")
+        customer_list_events()
         print("\nCustomer Menu")
-        print("1) List events")
-        print("2) Book available seats")
-        print("3) Reserve then pay (MPESA)")
-        print("4) My bookings")
+        print("1) Book available seats")
+        print("2) My bookings")
         print("0) Back")
         choice = input("Select: ").strip()
         if choice == "1":
-            customer_list_events()
-            pause()
-        elif choice == "2":
             customer_book_seats()
             pause()
-        elif choice == "3":
-            customer_reserve_and_pay()
-            pause()
-        elif choice == "4":
+        elif choice == "2":
             customer_list_my_bookings()
             pause()
         elif choice == "0":

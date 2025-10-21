@@ -78,3 +78,40 @@ def purchase_event_seats(event_id: int, eventseat_ids: Iterable[int], customer_i
 			created.append((ticket, label))
 
 	return created
+
+
+def finalize_held_seats(event_id: int, eventseat_ids: Iterable[int], customer_id: int) -> List[Tuple[Ticket, str]]:
+	"""
+	Finalize purchase of EventSeat ids that are currently HELD and not expired.
+	Creates Ticket rows and marks seats as SOLD. Skips any that are not HELD or already expired.
+	Returns list of (Ticket, seat_label) for successful finalizations.
+	"""
+	now = datetime.now(tz=timezone.utc)
+	created: List[Tuple[Ticket, str]] = []
+	ids = [int(i) for i in eventseat_ids]
+	if not ids:
+		return created
+
+	with get_session() as session:
+		rows = session.scalars(
+			select(EventSeat)
+			.where(EventSeat.event_id == event_id, EventSeat.id.in_(ids))
+			.options(selectinload(EventSeat.seat))
+		).all()
+		for es in rows:
+			if es.status != "HELD" or not es.held_until or es.held_until <= now:
+				continue
+			es.status = "SOLD"
+			es.held_until = None
+			ticket = Ticket(
+				customer_id=customer_id,
+				event_seat_id=es.id,
+				price_ksh=es.price_ksh,
+				purchased_at=now,
+			)
+			session.add(ticket)
+			seat = es.seat if hasattr(es, "seat") else None
+			label = f"{seat.row}{seat.number}" if seat else f"seat#{es.seat_id}"
+			created.append((ticket, label))
+
+	return created
