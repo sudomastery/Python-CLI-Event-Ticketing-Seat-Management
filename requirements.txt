@@ -1,0 +1,6 @@
+greenlet==3.2.4
+psycopg==3.2.10
+psycopg-binary==3.2.10
+python-dotenv==1.1.1
+SQLAlchemy==2.0.44
+typing_extensions==4.15.0
