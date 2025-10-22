@@ -1,7 +1,6 @@
 """
 Demo: list available seats, hold a few, sell one, release expired holds.
-Run from project root:
-  python -m scripts.hold_smoke_test
+
 """
 from datetime import datetime, timezone
 from sqlalchemy import select

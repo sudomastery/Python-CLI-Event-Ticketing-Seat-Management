@@ -5,8 +5,7 @@ Seed a few seats for an existing venue, then query them back.
 - Inserts seats A1..A5 if none exist yet for that venue.
 - Lists the seats.
 
-Run from project root:
-  python -m scripts.seat_smoke_test
+
 """
 from pathlib import Path
 import sys

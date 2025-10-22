@@ -1,7 +1,6 @@
 """
 Seed EventSeat rows for an event and list availability.
-Run from project root:
-  python -m scripts.eventseat_smoke_test
+
 """
 from pathlib import Path
 import sys

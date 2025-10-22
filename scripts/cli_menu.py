@@ -3,8 +3,6 @@ from __future__ import annotations
 """
 Text-menu CLI with Admin and Customer workflows.
 
-Run:
-  python -m scripts.cli_menu
 """
 import sys
 from pathlib import Path
@@ -116,7 +114,7 @@ def admin_create_event() -> None:
     # Ensure venue has at least this grid
     created_seats = ensure_grid(venue.id, rows, numbers)
     if created_seats:
-        print(f"Created {created_seats} venue seats to match capacity.")
+        print(f"The seats have been created successfully")
 
     # Price (default 1500) and auto-seed EventSeat rows limited by capacity
     price_str = input("Price KSh (e.g., 1500) [1500]: ").strip() or "1500"
@@ -262,7 +260,7 @@ def customer_book_seats() -> None:
                 to_sell_ids.append(esid)
 
     if not to_sell_ids:
-        print("No valid selections.")
+        print("Seat selection is not valid, please select a seat from the list ")
         return
 
     # Fetch event name once for confirmation output
